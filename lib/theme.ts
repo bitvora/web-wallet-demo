@@ -33,6 +33,11 @@ const theme: ThemeConfig = {
     Timeline: {
       tailColor: '#221e2b',
       tailWidth: 1
+    },
+    Input: {
+      activeBorderColor: '#9791A1',
+      activeShadow: 'unset',
+      hoverBorderColor: '#9791A1'
     }
   }
 };

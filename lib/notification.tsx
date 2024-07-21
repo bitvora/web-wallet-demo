@@ -23,7 +23,8 @@ const useNotifications = (): useNotificationInterface => {
     message.open({
       type: 'success',
       content,
-      duration
+      duration,
+      className: 'w-1/2'
     });
   };
 

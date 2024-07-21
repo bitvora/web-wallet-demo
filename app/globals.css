@@ -4,18 +4,20 @@
 
 body {
   color: #efedf1;
-  /* background: linear-gradient(to bottom, transparent, rgb(12, 9, 17)) rgb(12, 9, 17); */
   background: #0a070c;
-  width: 100vw;
-  height: 100vh;
-  max-width: 1920px;
-  max-height: 1080px;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.container {
+  max-width: 1920px;
+  max-height: 1080px;
+  width: 100vw;
+  height: 100vh;
 }
 
 input[type='number']::-webkit-outer-spin-button,
@@ -27,4 +29,59 @@ input[type='number']::-webkit-inner-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+input:focus,
+input:hover,
+input {
+  outline: none !important;
+  color: #efedf1;
+  border-color: #9791a1 !important;
+}
+
+input::placeholder {
+  color: #645c70 !important;
+  font-size: 14px;
+}
+
+.static-message-notice-content {
+  padding: 20px 30px !important;
+  width: 100% !important;
+  max-width: 600px !important;
+}
+
+.static-message-notice.static-message-notice-success .static-message-notice-content {
+  background: #2b3631 !important;
+}
+
+.static-message-custom-content.static-message-success {
+  color: #60c9a7 !important;
+}
+
+.static-message-custom-content.static-message-success .anticon.anticon-check-circle {
+  color: #60c9a7 !important;
+}
+
+.static-message-notice.static-message-notice-error .static-message-notice-content {
+  background: #f8b4b4 !important;
+}
+
+.static-message-custom-content.static-message-error {
+  color: #b33737 !important;
+}
+
+.static-message-custom-content.static-message-error .anticon.anticon-check-circle {
+  color: #b33737 !important;
+}
+
+.static-message-notice.static-message-notice-warning .static-message-notice-content {
+  background: #fef7e6 !important;
+}
+
+.static-message-custom-content.static-message-warning {
+  color: #faad14 !important;
+}
+
+.static-message-custom-content.static-message-warning .anticon.anticon-exclamation-circle {
+  color: #faad14 !important;
 }

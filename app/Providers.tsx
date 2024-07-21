@@ -1,35 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { ReactQueryStreamedHydration } from '@tanstack/react-query-next-experimental';
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ConfigProvider, App } from 'antd';
 import theme from '@/lib/theme';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
 
-const AppProviders = ({ children }: { children: React.ReactNode }): JSX.Element => {
-  const [client] = useState(
-    new QueryClient({
-      defaultOptions: {
-        queries: {
-          refetchOnWindowFocus: true
-        }
-      }
-    })
-  );
-
+const Providers = ({ children }: { children: React.ReactNode }): JSX.Element => {
   return (
-    <QueryClientProvider client={client}>
-      <ReactQueryStreamedHydration>
-        <ConfigProvider theme={theme} prefixCls="static">
-          <App message={{ maxCount: 1 }} notification={{ maxCount: 1 }}>
-            {children}
-          </App>
-        </ConfigProvider>
-      </ReactQueryStreamedHydration>
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-    </QueryClientProvider>
+    <AntdRegistry>
+      <ConfigProvider theme={theme} prefixCls="static">
+        <App message={{ maxCount: 21 }} notification={{ maxCount: 1 }}>
+          {children}
+        </App>
+      </ConfigProvider>
+    </AntdRegistry>
   );
 };
 
-export default AppProviders;
+export default Providers;
