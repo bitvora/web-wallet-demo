@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useState, useRef } from 'react';
 import { Button, QRCode } from 'antd';
 import useNotifications from '@/lib/notification';
 import numeral from 'numeral';
@@ -31,6 +31,8 @@ export default function Page() {
   const [lightningInvoice, setLightningInvoice] = useState({} as LightningInvoice);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [lnGoBrrrLoading, setLnGoBrrrLoading] = useState(false);
+
+  const intervalRef = useRef<any>(null);
 
   const loadBalance = async () => {
     const balance = await bitvora.getBalance();
@@ -162,6 +164,12 @@ export default function Page() {
   };
 
   const lnGoBrrr = async () => {
+    if (lnGoBrrrLoading) {
+      clearInterval(intervalRef.current);
+      setLnGoBrrrLoading(false);
+      return;
+    }
+
     if (tab === 'receive') {
       setDestination('');
       setAmount(0);
@@ -178,27 +186,28 @@ export default function Page() {
     setLnGoBrrrLoading(true);
     let count = 0;
 
-    const intervalId = setInterval(async () => {
+    intervalRef.current = setInterval(async () => {
       try {
         if (lnGoBrrrSatsAmount > balance) {
           warning('Insufficient balance!');
           setLnGoBrrrLoading(false);
-          clearInterval(intervalId);
+          clearInterval(intervalRef.current);
+          return;
+        }
+
+        if (count >= lnGoBrrrCount) {
+          clearInterval(intervalRef.current);
+          setLnGoBrrrLoading(false);
           return;
         }
 
         const withdrawal = await bitvora.withdraw(destination, lnGoBrrrSatsAmount);
         await withdrawal.isSettled();
-        success(`${lnGoBrrrSatsAmount} SATS sent`, 3);
+        success(`${lnGoBrrrSatsAmount} SATS sent: ${count}`, 3);
         await loadBalance();
         count++;
-        if (count >= lnGoBrrrCount) {
-          clearInterval(intervalId);
-
-          setLnGoBrrrLoading(false);
-        }
       } catch (err: any) {
-        clearInterval(intervalId);
+        clearInterval(intervalRef.current);
         error(err?.message);
         setLnGoBrrrLoading(false);
       }
@@ -221,7 +230,7 @@ export default function Page() {
           <div className="w-full mt-4 pt-4">
             <Button
               className="w-full font-semibold bg-primary border-primary hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12"
-              disabled={!apiKey}
+              disabled={apiKey.trim() === ''}
               loading={apiKeyLoading}
               onClick={onSave}>
               Save Key
@@ -329,9 +338,9 @@ export default function Page() {
 
             <Button
               className="w-full font-semibold bg-primary border-primary hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12 disabled:bg-[#1e152b] disabled:border-[#1e152b]"
-              disabled={!destination || lnGoBrrrLoading}
-              loading={lnGoBrrrLoading}
+              disabled={!destination}
               onClick={lnGoBrrr}>
+              {lnGoBrrrLoading && <LoadingOutlined />}
               LN GO BRRR
             </Button>
           </div>
