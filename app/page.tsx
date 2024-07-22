@@ -189,7 +189,7 @@ export default function Page() {
 
         const withdrawal = await bitvora.withdraw(destination, lnGoBrrrSatsAmount);
         await withdrawal.isSettled();
-        success(`${defaultSatsAmount} SATS sent`, 3);
+        success(`${lnGoBrrrSatsAmount} SATS sent`, 3);
         await loadBalance();
         count++;
         if (count >= lnGoBrrrCount) {
