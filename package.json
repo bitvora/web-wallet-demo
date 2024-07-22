@@ -13,7 +13,7 @@
     "@ant-design/nextjs-registry": "^1.0.0",
     "@tailwindcss/typography": "^0.5.13",
     "antd": "^5.19.3",
-    "bitvora": "^0.0.9",
+    "bitvora": "^0.0.10",
     "light-bolt11-decoder": "^3.1.1",
     "next": "14.2.5",
     "numeral": "^2.0.6",

@@ -13,6 +13,7 @@ let bitvora: BitvoraClient;
 
 const satsLimit = 1000;
 const defaultSatsAmount = 50;
+const lnGoBrrrSatsAmount = 21;
 const lnGoBrrrCount = 21;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -41,10 +42,10 @@ export default function Page() {
     setApiKeyLoading(true);
 
     try {
-      bitvora = new BitvoraClient(apiKey, 'mainnet');
+      bitvora = new BitvoraClient(apiKey.trim(), 'mainnet');
       const balance = await bitvora.getBalance();
       setBalance(balance);
-      setStoredKey(apiKey);
+      setStoredKey(apiKey.trim());
       success('Nice! You’re plugged into Bitvora');
     } catch (err) {
       error('Whoops! Invalid Key');
@@ -137,11 +138,12 @@ export default function Page() {
     setWithdrawalLoading(true);
     try {
       const withdrawal = await bitvora.withdraw(destination, amount);
+
       await withdrawal.isSettled();
       await loadBalance();
       success(`${amount} SATS sent`);
-    } catch (err) {
-      error('Error making payment');
+    } catch (err: any) {
+      error(err?.message);
     } finally {
       setWithdrawalLoading(false);
       setDestination('');
@@ -178,18 +180,26 @@ export default function Page() {
 
     const intervalId = setInterval(async () => {
       try {
-        const withdrawal = await bitvora.withdraw(destination, defaultSatsAmount);
+        if (lnGoBrrrSatsAmount > balance) {
+          warning('Insufficient balance!');
+          setLnGoBrrrLoading(false);
+          clearInterval(intervalId);
+          return;
+        }
+
+        const withdrawal = await bitvora.withdraw(destination, lnGoBrrrSatsAmount);
         await withdrawal.isSettled();
         success(`${defaultSatsAmount} SATS sent`, 3);
+        await loadBalance();
         count++;
         if (count >= lnGoBrrrCount) {
           clearInterval(intervalId);
-          await loadBalance();
+
           setLnGoBrrrLoading(false);
         }
-      } catch (err) {
+      } catch (err: any) {
         clearInterval(intervalId);
-        error('An error occurred while making the withdrawal');
+        error(err?.message);
         setLnGoBrrrLoading(false);
       }
     }, 1000);

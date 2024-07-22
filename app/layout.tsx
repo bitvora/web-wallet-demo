@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <div className="container">
+          <div className="main-container">
             <main className="w-full h-full flex justify-center items-center">
               <div className="max-w-[600px] md:bg-purple rounded-lg h-full md:h-[unset] w-full md:w-2/3">
                 <div className="justify-center text-center w-full px-4 py-6 mx-auto border-b-2 border-light border-opacity-20">

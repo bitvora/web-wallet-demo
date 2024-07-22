@@ -13,9 +13,7 @@ body {
   }
 }
 
-.container {
-  max-width: 1920px;
-  max-height: 1080px;
+.main-container {
   width: 100vw;
   height: 100vh;
 }
