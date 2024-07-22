@@ -1,32 +1,35 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
-import { Button } from 'antd';
-import useLocalStorage from '@/lib/useLocalStorage';
+import { Button, QRCode } from 'antd';
 import useNotifications from '@/lib/notification';
 import numeral from 'numeral';
 import lightBolt11Decoder from 'light-bolt11-decoder';
-import { BitvoraClient } from 'bitvora';
+import { BitvoraClient, LightningInvoice } from 'bitvora';
 import { LoadingOutlined } from '@ant-design/icons';
+import Image from 'next/image';
 
 let bitvora: BitvoraClient;
 
 const satsLimit = 1000;
+const defaultSatsAmount = 50;
+const lnGoBrrrCount = 21;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Page() {
-  const { success, error, warning } = useNotifications();
+  const { success, error, warning, info } = useNotifications();
 
   const [balance, setBalance] = useState(0);
   const [destination, setDestination] = useState('');
-  const [balanceLoading, setBalanceLoading] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [apiKeyLoading, setApiKeyLoading] = useState(false);
   const [tab, setTab] = useState('send');
   const [amount, setAmount] = useState(0);
   const [withdrawalLoading, setWithdrawalLoading] = useState(false);
-  const [storedKey, setStoredKey] = useLocalStorage('bit-api-key', '');
-
-  bitvora = new BitvoraClient(storedKey, 'mainnet');
+  const [storedKey, setStoredKey] = useState('');
+  const [lightningInvoice, setLightningInvoice] = useState({} as LightningInvoice);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [lnGoBrrrLoading, setLnGoBrrrLoading] = useState(false);
 
   const loadBalance = async () => {
     const balance = await bitvora.getBalance();
@@ -51,21 +54,13 @@ export default function Page() {
   };
 
   useEffect(() => {
-    (async () => {
-      setBalanceLoading(true);
-      await loadBalance();
-      setBalanceLoading(false);
-    })();
-  }, []);
-
-  useEffect(() => {
     if (destination.length > 100) {
       try {
         const ln = lightBolt11Decoder.decode(destination);
         const amountObject = ln?.sections.find((item: any) => item.name === 'amount');
         const amountValue = amountObject ? amountObject.value : undefined;
 
-        const amount = amountValue ? Number(amountValue) / 1000 : 0;
+        const amount = amountValue ? Number(amountValue) / 1000 : 50;
 
         if (amount > satsLimit) {
           warning('Demo limited to 1000 sat payments');
@@ -74,27 +69,130 @@ export default function Page() {
         }
       } catch (err) {
         setAmount(0);
-        error('Invalid lightning invoice');
+        warning('Invalid lightning invoice');
       }
+    } else {
+      setAmount(defaultSatsAmount);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destination]);
 
+  const loadLightningInvoice = async () => {
+    setInvoiceLoading(true);
+    const invoice = await bitvora.createLightningInvoice(
+      defaultSatsAmount,
+      'this is from the sdk',
+      3600,
+      null
+    );
+
+    //@ts-ignore
+    setLightningInvoice(invoice);
+    setInvoiceLoading(false);
+
+    await invoice.isSettled();
+    await loadBalance();
+    success(`${defaultSatsAmount} SATS received`);
+    setLightningInvoice({} as LightningInvoice);
+    setTab('send');
+  };
+
+  useEffect(() => {
+    if (tab === 'receive') {
+      loadLightningInvoice();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
   const sendBitcoin = async (event: any) => {
     event.preventDefault();
+
+    if (tab === 'receive') {
+      setDestination('');
+      setAmount(0);
+      setTab('send');
+      return;
+    }
+
+    if (!amount) {
+      setAmount(defaultSatsAmount);
+    }
+
+    if (amount > balance) {
+      warning('Amount more than available balance');
+      return;
+    }
+
+    const isInvoice = destination.length > 100;
+
+    if (!isInvoice) {
+      const isValid = emailRegex.test(destination);
+
+      if (!isValid) {
+        warning('Invalid lightning address format');
+        return;
+      }
+    }
+
     setWithdrawalLoading(true);
     try {
       const withdrawal = await bitvora.withdraw(destination, amount);
-      // await withdrawal.isSettled();
+      await withdrawal.isSettled();
       await loadBalance();
+      success(`${amount} SATS sent`);
     } catch (err) {
       error('Error making payment');
     } finally {
       setWithdrawalLoading(false);
+      setDestination('');
+      setAmount(0);
     }
-    success(`${amount} SATS sent`);
-    setDestination('');
-    setAmount(0);
+  };
+
+  const copyToClipboard = async (): Promise<void> => {
+    window.navigator.clipboard.writeText(lightningInvoice.payment_request);
+    info('Invoice copied', 5);
+  };
+
+  const pressReceive = (event: any) => {
+    event.preventDefault();
+    setTab('receive');
+  };
+
+  const lnGoBrrr = async () => {
+    if (tab === 'receive') {
+      setDestination('');
+      setAmount(0);
+      setTab('send');
+      return;
+    }
+
+    const isValid = emailRegex.test(destination);
+    if (!isValid) {
+      warning('Invalid lightning address format');
+      return;
+    }
+
+    setLnGoBrrrLoading(true);
+    let count = 0;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const withdrawal = await bitvora.withdraw(destination, defaultSatsAmount);
+        await withdrawal.isSettled();
+        success(`${defaultSatsAmount} SATS sent`, 3);
+        count++;
+        if (count >= lnGoBrrrCount) {
+          clearInterval(intervalId);
+          await loadBalance();
+          setLnGoBrrrLoading(false);
+        }
+      } catch (err) {
+        clearInterval(intervalId);
+        error('An error occurred while making the withdrawal');
+        setLnGoBrrrLoading(false);
+      }
+    }, 1000);
   };
 
   return (
@@ -123,22 +221,15 @@ export default function Page() {
       )}
 
       {storedKey && (
-        <div className="w-full text-center justify-center px-4">
+        <div className="w-full text-center justify-center md:px-4">
           {tab === 'send' && (
             <Fragment>
               <p className="text-light">Current Balance</p>
               <div className="flex text-center justify-center text-white">
-                {balanceLoading ? (
-                  <LoadingOutlined
-                    color="inherit"
-                    style={{ fontSize: '25px', marginTop: '20px' }}
-                  />
-                ) : (
-                  <p className="text-[40px] text-white font-semibold items-center">
-                    {numeral(balance).format('0,0')}
-                    <span className="text-light font-light pl-2">SATS</span>
-                  </p>
-                )}
+                <p className="text-[40px] text-white font-semibold items-center">
+                  {numeral(balance).format('0,0')}
+                  <span className="text-light font-light pl-2">SATS</span>
+                </p>
               </div>
 
               <div className="w-full relative mt-4 pt-4">
@@ -153,26 +244,87 @@ export default function Page() {
                   <p className="text-xs text-light font-light">{amount} SATS</p>
                 </div>
               </div>
-
-              <div className="w-full mt-8 pt-8">
-                <div className="w-full gap-3 flex items-center mb-2 pb-2">
-                  <Button className="w-full font-semibold bg-[#1e152b] border-[#1e152b] hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12">
-                    Receive
-                  </Button>
-                  <Button
-                    className="w-full font-semibold bg-[#1e152b] border-[#1e152b] hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12 disabled:bg-[#1e152b]"
-                    onClick={sendBitcoin}
-                    loading={withdrawalLoading}
-                    disabled={!amount || amount > balance}>
-                    Send
-                  </Button>
-                </div>
-                <Button className="w-full font-semibold bg-primary border-primary hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12">
-                  LN GO BRRR
-                </Button>
-              </div>
             </Fragment>
           )}
+
+          {tab === 'receive' && (
+            <div className="w-full text-center justify-center">
+              {invoiceLoading ? (
+                <div className="text-white flex justify-center items-center">
+                  <LoadingOutlined
+                    color="inherit"
+                    style={{ fontSize: '40px', marginTop: '20px' }}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="w-full text-center justify-center flex">
+                    <QRCode
+                      errorLevel="H"
+                      type="svg"
+                      value={lightningInvoice.payment_request}
+                      icon="/logo.svg"
+                      size={220}
+                      bordered={false}
+                      color="#EFEDF1"
+                      status={invoiceLoading ? 'loading' : 'active'}
+                    />
+                  </div>
+
+                  <div className="w-full relative mt-4 pt-4">
+                    <input
+                      placeholder="Enter Invoice or LN Address"
+                      className="h-[50px] pl-4 py-3 pr-[110px] bg-black text-sm outline-none border-light focus:border-light hover:border-light border-[1px] border-opacity-15 hover:border-opacity-15 focus:border-opacity-15 w-full rounded-lg"
+                      value={lightningInvoice.payment_request}
+                      disabled
+                    />
+
+                    <div className="bg-[#1e152b] py-2 px-2 rounded-sm absolute top-6 right-2 flex gap-2">
+                      <p className="text-xs text-light font-light">
+                        <span className="text-white">{defaultSatsAmount}</span> SATS
+                      </p>
+                      <button onClick={copyToClipboard}>
+                        <Image src="/copy.svg" alt="bitcoin" width={16} height={16} />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="w-full mt-4 pt-4 md:mt-8 md:pt-8">
+            <div className="w-full gap-3 flex items-center mb-2 pb-2">
+              <Button
+                className={`w-full font-semibold  hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12 ${
+                  tab === 'receive'
+                    ? 'bg-[#1e152b] border-[#1e152b]'
+                    : 'bg-[#1e152b] border-[#1e152b]'
+                }`}
+                onClick={pressReceive}>
+                Receive
+              </Button>
+              <Button
+                className={`w-full font-semibold text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 h-12 disabled:bg-[#1e152b] ${
+                  tab === 'receive'
+                    ? 'bg-[#0a0910] border-[#0a0910] hover:bg-[#0a0910] text-[#312E36]'
+                    : 'bg-[#1e152b] border-[#1e152b] hover:bg-[#443361] text-white'
+                }`}
+                onClick={sendBitcoin}
+                loading={withdrawalLoading}
+                disabled={withdrawalLoading}>
+                Send
+              </Button>
+            </div>
+
+            <Button
+              className="w-full font-semibold bg-primary border-primary hover:bg-[#443361] text-sm tracking-[4%] leading-4 rounded-md px-4 py-2 text-white h-12 disabled:bg-[#1e152b] disabled:border-[#1e152b]"
+              disabled={!destination || lnGoBrrrLoading}
+              loading={lnGoBrrrLoading}
+              onClick={lnGoBrrr}>
+              LN GO BRRR
+            </Button>
+          </div>
         </div>
       )}
     </Fragment>

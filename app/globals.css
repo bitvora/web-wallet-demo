@@ -75,7 +75,7 @@ input::placeholder {
 }
 
 .static-message-notice.static-message-notice-warning .static-message-notice-content {
-  background: #fef7e6 !important;
+  background: #353221 !important;
 }
 
 .static-message-custom-content.static-message-warning {
@@ -84,4 +84,16 @@ input::placeholder {
 
 .static-message-custom-content.static-message-warning .anticon.anticon-exclamation-circle {
   color: #faad14 !important;
+}
+
+.static-message-notice.static-message-notice-info .static-message-notice-content {
+  background: #cddbfe !important;
+}
+
+.static-message-custom-content.static-message-info {
+  color: #455ccd !important;
+}
+
+.static-message-custom-content.static-message-info .anticon.anticon-info-circle {
+  color: #455ccd !important;
 }

@@ -23,21 +23,21 @@ export default function RootLayout({
         <Providers>
           <div className="container">
             <main className="w-full h-full flex justify-center items-center">
-              <div className="max-w-[600px] bg-purple w-2/3 rounded-lg">
+              <div className="max-w-[600px] md:bg-purple rounded-lg h-full md:h-[unset] w-full md:w-2/3">
                 <div className="justify-center text-center w-full px-4 py-6 mx-auto border-b-2 border-light border-opacity-20">
-                  <div className="justify-center text-center w-full flex mx-auto mb-3 pb-2">
+                  <div className="justify-center text-center w-full flex mx-auto mb-4 pb-4 md:mb-3 md:pb-2">
                     <Image src="/logo.png" height={40} width={110} alt="Bitvora" />
                   </div>
 
-                  <h1 className="text-[30px] text-white font-medium tracking-tight">
+                  <h1 className="text-[35px] md:text-[30px] text-white font-medium tracking-tight mb-1">
                     Money Highway
                   </h1>
-                  <p className="text-[13px] font-semibold text-light">
+                  <p className="text-[14px] font-semibold text-light">
                     Demo the power of Bitvora’s API
                   </p>
                 </div>
 
-                <div className="px-8 py-8">{children}</div>
+                <div className="px-4 md:px-8 py-8">{children}</div>
               </div>
             </main>
           </div>

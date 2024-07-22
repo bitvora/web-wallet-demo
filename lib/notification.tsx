@@ -1,17 +1,17 @@
 import { App } from 'antd';
 
 interface useNotificationInterface {
-  info: (content: string) => void;
-  success: (content: string) => void;
-  error: (content: string) => void;
-  warning: (content: string) => void;
+  info: (content: string, duration?: number) => void;
+  success: (content: string, duration?: number) => void;
+  error: (content: string, duration?: number) => void;
+  warning: (content: string, duration?: number) => void;
 }
 
 const useNotifications = (): useNotificationInterface => {
-  const duration = 10;
+  const defaultDuration = 10;
   const { message } = App.useApp();
 
-  const info = (content: string): void => {
+  const info = (content: string, duration = defaultDuration): void => {
     message.open({
       type: 'info',
       content,
@@ -19,7 +19,7 @@ const useNotifications = (): useNotificationInterface => {
     });
   };
 
-  const success = (content: string): void => {
+  const success = (content: string, duration = defaultDuration): void => {
     message.open({
       type: 'success',
       content,
@@ -28,7 +28,7 @@ const useNotifications = (): useNotificationInterface => {
     });
   };
 
-  const error = (content: string): void => {
+  const error = (content: string, duration = defaultDuration): void => {
     message.open({
       type: 'error',
       content,
@@ -36,7 +36,7 @@ const useNotifications = (): useNotificationInterface => {
     });
   };
 
-  const warning = (content: string): void => {
+  const warning = (content: string, duration = defaultDuration): void => {
     message.open({
       type: 'warning',
       content,

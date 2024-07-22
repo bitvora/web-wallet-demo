@@ -8,7 +8,7 @@ const Providers = ({ children }: { children: React.ReactNode }): JSX.Element => 
   return (
     <AntdRegistry>
       <ConfigProvider theme={theme} prefixCls="static">
-        <App message={{ maxCount: 21 }} notification={{ maxCount: 1 }}>
+        <App message={{ maxCount: 5 }} notification={{ maxCount: 1 }}>
           {children}
         </App>
       </ConfigProvider>
