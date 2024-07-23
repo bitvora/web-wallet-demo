@@ -1,13 +1,14 @@
 'use client';
 
 import { Fragment, useEffect, useState, useRef } from 'react';
-import { Button, QRCode } from 'antd';
+import { Button } from 'antd';
 import useNotifications from '@/lib/notification';
 import numeral from 'numeral';
 import lightBolt11Decoder from 'light-bolt11-decoder';
 import { BitvoraClient, LightningInvoice } from 'bitvora';
 import { LoadingOutlined, CloseOutlined } from '@ant-design/icons';
 import Image from 'next/image';
+import QRCode from 'react-qr-code';
 
 let bitvora: BitvoraClient;
 
@@ -288,7 +289,17 @@ export default function Page() {
                   </div>
                 ) : (
                   <>
-                    <div className="w-full text-center justify-center flex">
+                    <div
+                      className="w-full text-center justify-center flex"
+                      style={{ height: 'auto', margin: '0 auto', maxWidth: 200, width: '100%' }}>
+                      <QRCode
+                        size={256}
+                        style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
+                        value={lightningInvoice?.payment_request ?? ''}
+                        viewBox={`0 0 200 200`}
+                      />
+                    </div>
+                    {/* <div className="w-full text-center justify-center flex">
                       <QRCode
                         errorLevel="H"
                         type="svg"
@@ -299,7 +310,7 @@ export default function Page() {
                         color="#EFEDF1"
                         status={invoiceLoading ? 'loading' : 'active'}
                       />
-                    </div>
+                    </div> */}
 
                     <div className="w-full relative mt-4 pt-4">
                       <input
