@@ -95,3 +95,8 @@ input::placeholder {
 .static-message-custom-content.static-message-info .anticon.anticon-info-circle {
   color: #455ccd !important;
 }
+
+.static-qrcode {
+  border: 5px solid #EFEDF1 !important;
+  border-radius: 10px !important;
+}

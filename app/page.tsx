@@ -6,7 +6,7 @@ import useNotifications from '@/lib/notification';
 import numeral from 'numeral';
 import lightBolt11Decoder from 'light-bolt11-decoder';
 import { BitvoraClient, LightningInvoice } from 'bitvora';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, CloseOutlined } from '@ant-design/icons';
 import Image from 'next/image';
 
 let bitvora: BitvoraClient;
@@ -48,7 +48,7 @@ export default function Page() {
       const balance = await bitvora.getBalance();
       setBalance(balance);
       setStoredKey(apiKey.trim());
-      success('Nice! You’re plugged into Bitvora');
+      success('Nice! You’re plugged into Bitvora', 3);
     } catch (err) {
       error('Whoops! Invalid Key');
     } finally {
@@ -107,13 +107,17 @@ export default function Page() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  const switchToSend = () => {
+    setDestination('');
+    setAmount(0);
+    setTab('send');
+  };
+
   const sendBitcoin = async (event: any) => {
     event.preventDefault();
 
     if (tab === 'receive') {
-      setDestination('');
-      setAmount(0);
-      setTab('send');
+      switchToSend();
       return;
     }
 
@@ -240,7 +244,7 @@ export default function Page() {
       )}
 
       {storedKey && (
-        <div className="w-full text-center justify-center md:px-4">
+        <div className="w-full text-center justify-center md:px-4 relative">
           {tab === 'send' && (
             <Fragment>
               <p className="text-light">Current Balance</p>
@@ -267,49 +271,57 @@ export default function Page() {
           )}
 
           {tab === 'receive' && (
-            <div className="w-full text-center justify-center">
-              {invoiceLoading ? (
-                <div className="text-white flex justify-center items-center">
-                  <LoadingOutlined
-                    color="inherit"
-                    style={{ fontSize: '40px', marginTop: '20px' }}
-                  />
-                </div>
-              ) : (
-                <>
-                  <div className="w-full text-center justify-center flex">
-                    <QRCode
-                      errorLevel="H"
-                      type="svg"
-                      value={lightningInvoice.payment_request}
-                      icon="/logo.svg"
-                      size={220}
-                      bordered={false}
-                      color="#EFEDF1"
-                      status={invoiceLoading ? 'loading' : 'active'}
+            <Fragment>
+              <button
+                className="absolute text-white hover:text-light -right-1 -top-4"
+                onClick={switchToSend}>
+                <CloseOutlined color="inherit" />
+              </button>
+
+              <div className="w-full text-center justify-center">
+                {invoiceLoading ? (
+                  <div className="text-white flex justify-center items-center">
+                    <LoadingOutlined
+                      color="inherit"
+                      style={{ fontSize: '40px', marginTop: '20px' }}
                     />
                   </div>
-
-                  <div className="w-full relative mt-4 pt-4">
-                    <input
-                      placeholder="Enter Invoice or LN Address"
-                      className="h-[50px] pl-4 py-3 pr-[110px] bg-black text-sm outline-none border-light focus:border-light hover:border-light border-[1px] border-opacity-15 hover:border-opacity-15 focus:border-opacity-15 w-full rounded-lg"
-                      value={lightningInvoice.payment_request}
-                      disabled
-                    />
-
-                    <div className="bg-[#1e152b] py-2 px-2 rounded-sm absolute top-6 right-2 flex gap-2">
-                      <p className="text-xs text-light font-light">
-                        <span className="text-white">{defaultSatsAmount}</span> SATS
-                      </p>
-                      <button onClick={copyToClipboard}>
-                        <Image src="/copy.svg" alt="bitcoin" width={16} height={16} />
-                      </button>
+                ) : (
+                  <>
+                    <div className="w-full text-center justify-center flex">
+                      <QRCode
+                        errorLevel="H"
+                        type="svg"
+                        value={lightningInvoice.payment_request}
+                        // icon="/logo.svg"
+                        size={250}
+                        bordered={false}
+                        color="#EFEDF1"
+                        status={invoiceLoading ? 'loading' : 'active'}
+                      />
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+
+                    <div className="w-full relative mt-4 pt-4">
+                      <input
+                        placeholder="Enter Invoice or LN Address"
+                        className="h-[50px] pl-4 py-3 pr-[110px] bg-black text-sm outline-none border-light focus:border-light hover:border-light border-[1px] border-opacity-15 hover:border-opacity-15 focus:border-opacity-15 w-full rounded-lg"
+                        value={lightningInvoice.payment_request}
+                        disabled
+                      />
+
+                      <div className="bg-[#1e152b] py-2 px-2 rounded-sm absolute top-6 right-2 flex gap-2">
+                        <p className="text-xs text-light font-light">
+                          <span className="text-white">{defaultSatsAmount}</span> SATS
+                        </p>
+                        <button onClick={copyToClipboard}>
+                          <Image src="/copy.svg" alt="bitcoin" width={16} height={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </Fragment>
           )}
 
           <div className="w-full mt-4 pt-4 md:mt-8 md:pt-8">
