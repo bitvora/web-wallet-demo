@@ -84,7 +84,7 @@ export default function Page() {
     setInvoiceLoading(true);
     const invoice = await bitvora.createLightningInvoice(
       defaultSatsAmount,
-      'this is from the sdk',
+      'Sending to Bitvora API Demo',
       3600,
       null
     );
