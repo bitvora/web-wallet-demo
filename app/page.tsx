@@ -298,7 +298,7 @@ export default function Page() {
                           height: 'auto',
                           maxWidth: '100%',
                           width: '100%',
-                          border: '20px solid #EFEDF1',
+                          border: '10px solid #EFEDF1',
                           borderRadius: 5
                         }}
                         value={lightningInvoice?.payment_request ?? ''}
