@@ -291,26 +291,20 @@ export default function Page() {
                   <>
                     <div
                       className="w-full text-center justify-center flex"
-                      style={{ height: 'auto', margin: '0 auto', maxWidth: 200, width: '100%' }}>
+                      style={{ height: 'auto', margin: '0 auto', maxWidth: 250, width: '100%' }}>
                       <QRCode
-                        size={256}
-                        style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
+                        size={300}
+                        style={{
+                          height: 'auto',
+                          maxWidth: '100%',
+                          width: '100%',
+                          border: '20px solid #EFEDF1',
+                          borderRadius: 5
+                        }}
                         value={lightningInvoice?.payment_request ?? ''}
                         viewBox={`0 0 200 200`}
                       />
                     </div>
-                    {/* <div className="w-full text-center justify-center flex">
-                      <QRCode
-                        errorLevel="H"
-                        type="svg"
-                        value={lightningInvoice.payment_request}
-                        // icon="/logo.svg"
-                        size={250}
-                        bordered={false}
-                        color="#EFEDF1"
-                        status={invoiceLoading ? 'loading' : 'active'}
-                      />
-                    </div> */}
 
                     <div className="w-full relative mt-4 pt-4">
                       <input
